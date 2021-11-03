@@ -130,7 +130,8 @@ class EDPSEnv(gym.Env):
         for res_type in range(self.types_resources):
             for acuity in range(self.acuities):
                 ans[res_type][acuity] = len(self.queues[res_type][acuity])
-            ans[res_type] = ans[res_type] / np.sum(ans[res_type])
+            if np.sum(ans[res_type]) != 0:
+                ans[res_type] = ans[res_type] / np.sum(ans[res_type])
         return ans
 
     def _process_events(self):
