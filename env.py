@@ -53,6 +53,7 @@ class EDPSEnv(gym.Env):
         """
         resource_type = action[0]
         acuity = action[1]
+        print(self.queues)
         assert self.free_resources[resource_type] > 0, "Invalid resource type"
         assert len(self.queues[resource_type][acuity]) > 0, "Invalid patient acuity"
         curr_queue = self.queues[resource_type][acuity]
