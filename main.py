@@ -17,13 +17,18 @@ basic_config = {
 # Improving Emergency Department Efficiency by Patient Scheduling Using Deep Reinforcement Learning
 # https://doi.org/10.3390/healthcare8020077
 paper_config = {
-    "resources": {0: 1}, 
-    "acuities": 5,                     # pg 9, table 4, Acuity Level
-    "prob_acuities": [.1,.3,.4,.1,.1], # pg 9, table 4, Ratio
-    "weighted_wait": [30,15,1,1,1],    # pg 9, table 4, Weighted Waiting Time
+    "resources": {0: 3, 1: 5, 2: 1, 3: 1}, # pg 10, para 2
+    "acuities": 5,                         # pg 9, table 4, Acuity Level
+    "prob_acuities": [.1,.3,.4,.1,.1],     # pg 9, table 4, Ratio
+    "weighted_wait": [30,15,1,1,1],        # pg 9, table 4, Weighted Waiting Time
     "order": [0],
     "spawn": 5, 
-    "treatment_times": {0: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1}},
+    "treatment_times": {
+        0: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1},
+        1: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1},
+        2: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1},
+        3: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1},
+    },
     "max_time": 60, 
     "set_seed": 0
 }
