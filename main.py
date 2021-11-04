@@ -21,8 +21,9 @@ class Distribution:
         self.rng = None
     def set_rng(self, rng):
         self.rng = rng
-    def __call__(self):
-        return getattr(self.rng, self.distribution)(*self.params)
+    def __call__(self, is_round=True):
+        result = max(0, getattr(self.rng, self.distribution)(*self.params))
+        return round(result) if is_round else result
 
 class Expo(Distribution):
     def __init__(self, *params): super().__init__('exponential', params)
