@@ -41,7 +41,7 @@ paper_config = {
     "prob_acuities": [.1,.3,.4,.1,.1],     # pg 9, table 4, Ratio
     "weighted_wait": [30,15,1,1,1],        # pg 9, table 4, Weighted Waiting Time
     "orders": [[0,1,2,7],[0,1,2,4,7],[0,1,2,3,4,7],[0,1,2,5,7],[0,1,2,3,4,5,7],[0,1,2,3,7],[0,1,2,4,3,7],[0,1,2,6,7],[0,1,2,6,4,5,8],[0,1,2,3,8],[0,1,2,4,3,8]],
-    "spawn": 5,
+    "spawn": 5, # poisson 7, 8, 9, 10
     "treatment2resource": {
         0: 0,
         1: 1,
@@ -54,16 +54,39 @@ paper_config = {
         8: 1,
     },
     "treatment_times": { # pg 8, table 2
+        # resource: treatment
         0: {0: Expo(7), 2: Normal(14, 6)},
         1: {1: Expo(5.5), 3: Normal(35, 15), 5: Normal(15, 8), 7: Constant(30), 8: Expo(3)},
         2: {4: Expo(12)},
         3: {6: Normal(29, 14)},
     },
-    "max_time": 60, 
+    "max_time": 60, # 60*24*14
     "set_seed": 0
 }
 
-basic_edps = EDPSEnv(paper_config)
+simple_config = {
+    "resources": {0: 3, 1: 5, 2: 1}, # 3 docs, 5 nurses, 1 xray (no more than 6, no more than 4)
+    "acuities": 5,                         # 5 severities
+    "prob_acuities": [.1,.3,.4,.1,.1],     # acuity probability frequencies
+    "weighted_wait": [30,15,1,1,1],        # Weighted Waiting Time
+    "orders": [[1,0],[1,2,0]],             # triage>consult; triage>xray>consult
+    "spawn": 5, # poisson 7, 8, 9, 10
+    "treatment2resource": {
+        0: 0,
+        1: 1,
+        2: 2,
+    },
+    "treatment_times": { # pg 8, table 2
+        # resource: treatment
+        0: {0: Expo(7)},
+        1: {1: Expo(5.5)},
+        2: {2: Expo(12)},
+    },
+    "max_time": 60, # 60*24*14
+    "set_seed": 0
+}
+
+basic_edps = EDPSEnv(simple_config)
 obs = basic_edps.reset()
 initial_debug = basic_edps.debug()
 
@@ -71,7 +94,7 @@ obs = basic_edps._get_state()
 
 done = False
 while not done:
-    # print(obs)
+    print(obs)
     action = obs.argmax(axis=1)
     obs, reward, done, debug = basic_edps.step(action)
     pprint(debug)

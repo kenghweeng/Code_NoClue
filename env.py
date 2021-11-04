@@ -49,7 +49,7 @@ class EDPSEnv(gym.Env):
         
     def step(self, action):
         """
-        Action is of the form (resource_type, acuity)
+        Action is of the form (acuity_0, acuity_1, acuity_2)
         Assign patient with longest waiting time of the given acuity and waiting for resource_type to resource_type
         """
         print(action)
@@ -115,7 +115,7 @@ class EDPSEnv(gym.Env):
     def debug(self):
         d = {}
         d["queue"] = self.queues
-        d["events"] = self.events_heap
+        d["events"] = self.events_heap[:10]
         d["time"] = self.time
         d["free_resources"] = self.free_resources
         return d
