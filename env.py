@@ -41,7 +41,7 @@ class EDPSEnv(gym.Env):
         self.set_seed = config["set_seed"]
 
         # gym arguments
-        self.action_space = spaces.MultiDiscrete([self.types_resources, self.acuities])
+        self.action_space = spaces.MultiDiscrete([[self.acuities] for _ in range(self.types_resources)])
         empty = np.zeros([self.types_resources, self.acuities])
         high = np.ones_like(empty)
         self.observation_space = spaces.Box(empty, high, dtype=np.float64)
@@ -52,27 +52,29 @@ class EDPSEnv(gym.Env):
         Action is of the form (resource_type, acuity)
         Assign patient with longest waiting time of the given acuity and waiting for resource_type to resource_type
         """
-        resource_type = action[0]
-        acuity = action[1]
-        print(self.queues)
-        assert self.free_resources[resource_type] > 0, "Invalid resource type"
-        assert len(self.queues[resource_type][acuity]) > 0, "Invalid patient acuity"
-        curr_queue = self.queues[resource_type][acuity]
+        print(action)
+        reward = 0
+        for resource_type, acuity in enumerate(action):
+            try:
+                assert self.free_resources[resource_type] > 0, "Invalid resource type"
+                assert len(self.queues[resource_type][acuity]) > 0, "Invalid patient acuity"
+            except AssertionError:
+                continue
+            curr_queue = self.queues[resource_type][acuity]
 
-        # Get longest waiting patient
-        patient_queue = list(map(lambda x: self.patients[x], curr_queue))
-        waiting = list(map(lambda x: (self.time - x.start_wait + x.waiting_time, x.id), patient_queue))
-        patient_id = sorted(waiting, reverse=True)[0][1]
+            # Get longest waiting patient
+            patient_queue = list(map(lambda x: self.patients[x], curr_queue))
+            waiting = list(map(lambda x: (self.time - x.start_wait + x.waiting_time, x.id), patient_queue))
+            patient_id = sorted(waiting, reverse=True)[0][1]
 
-        # Process patient
-        curr_queue.remove(patient_id)
-        self.free_resources[resource_type] -= 1
-        patient = self.patients[patient_id]
-        event = patient.process(self.time)
-        if event:
-            heapq.heappush(self.events_heap, event)
-        reward = 0 - patient.waiting_time
-        reward *= self.weighted_wait[patient.acuity]
+            # Process patient
+            curr_queue.remove(patient_id)
+            self.free_resources[resource_type] -= 1
+            patient = self.patients[patient_id]
+            event = patient.process(self.time)
+            if event:
+                heapq.heappush(self.events_heap, event)
+            reward -= patient.waiting_time * self.weighted_wait[patient.acuity]
 
         done = self._process_events()
 
@@ -81,6 +83,9 @@ class EDPSEnv(gym.Env):
 
     def reset(self):
         self.seed(self.set_seed)
+        for dct in self.treatment_times.values():
+            for dist in dct.values():
+                dist.set_rng(self.rng)
         self.patients = {}
         self.events_heap = []  # will be used as a heapq of (time, patient id, free resource, next resource to queue)
         self.queues = {}  # dictionary of resource to acuity to list of patient numbers
@@ -219,7 +224,7 @@ class Patient:
             self.waiting_time += waited
             curr_treatment = self.order.pop(0)
             curr_resource = self.treatment2resource[curr_treatment]
-            self.start_wait = time + self.treatments[curr_resource][curr_treatment]
+            self.start_wait = time + self.treatments[curr_resource][curr_treatment]()
             if len(self.order) > 0:
                 next_treatment = self.order[0]
                 next_resource = self.treatment2resource[next_treatment]

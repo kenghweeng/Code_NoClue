@@ -14,6 +14,24 @@ basic_config = {
     "set_seed": 0
 }
 
+class Distribution:
+    def __init__(self, distribution, params):
+        self.distribution = distribution
+        self.params = params
+        self.rng = None
+    def set_rng(self, rng):
+        self.rng = rng
+    def __call__(self):
+        return getattr(self.rng, self.distribution)(*self.params)
+
+class Expo(Distribution):
+    def __init__(self, *params): super().__init__('exponential', params)
+class Normal(Distribution):
+    def __init__(self, *params): super().__init__('normal', params)
+class Constant(Distribution):
+    def __init__(self, *params): super().__init__('constant', params)
+    def __call__(self): return self.params[0]
+
 # Improving Emergency Department Efficiency by Patient Scheduling Using Deep Reinforcement Learning
 # https://doi.org/10.3390/healthcare8020077
 paper_config = {
@@ -34,11 +52,11 @@ paper_config = {
         7: 1,
         8: 1,
     },
-    "treatment_times": {
-        0: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
-        1: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
-        2: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
-        3: {0: 1, 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1},
+    "treatment_times": { # pg 8, table 2
+        0: {0: Expo(7), 2: Normal(14, 6)},
+        1: {1: Expo(5.5), 3: Normal(35, 15), 5: Normal(15, 8), 7: Constant(30), 8: Expo(3)},
+        2: {4: Expo(12)},
+        3: {6: Normal(29, 14)},
     },
     "max_time": 60, 
     "set_seed": 0
@@ -52,6 +70,7 @@ obs = basic_edps._get_state()
 
 done = False
 while not done:
-    action = np.unravel_index(obs.argmax(), obs.shape)
+    # print(obs)
+    action = obs.argmax(axis=1)
     obs, reward, done, debug = basic_edps.step(action)
     pprint(debug)
