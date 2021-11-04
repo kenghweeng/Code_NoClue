@@ -1,6 +1,8 @@
+from collections import defaultdict
 import gym
 import heapq
 import numpy as np
+from utils.misc import get_distribution_function
 from gym import spaces
 
 class EDPSEnv(gym.Env):
@@ -11,58 +13,62 @@ class EDPSEnv(gym.Env):
         Each resource type provides only ONE specific treatment. 
 
         Initialisation parameters for environment:
-        resources           dict of resource types (nurse (0)/doctor (1)) to number of resources
-        acuities            number of acuities/priority classes
-        prob_acuities       list of probabilities for each acuity from 0 to N-1
-        weighted_wait       dict of acuities to weight for waiting time
-        order               sequence of resource visiting order (i.e. nurse -> doctor is 0 -> 1)
-        spawn               RandDist of patients entering ED
-        treatment_times     dict of resource types to acuities to RandDist
-        max_time            time when simulation cuts off
-        set_seed            set seed of random generator
-
-        RandDist is a tuple of Distribution (Poisson, Geometric, etc), then associated params for the distribution
-        !!!!! But to simplify I will only use Poisson here !!!!!
+        acuities               self.data['acuities']
+        resources              self.data['resources']
+        treatments             self.data['treatments']
+        patterns               self.data['patterns']
+        patient_distribution   type of distribution modeling patient arrival
+        patient_params         parameters for patient distribution
+        patient_priority_func  priority function for patient
+        warm_up_time           time to exclude from final reward
+        max_time               time when simulation cuts off (includes warm-up time)
+        seed                   seed of random generator
         """
-        super(EDPSEnv, self).__init__()
+        super().__init__()
 
         # Initialisation of parameters
-        self.resources = config["resources"]
-        self.types_resources = len(self.resources)
         self.acuities = config["acuities"]
-        self.prob_acuities = config["prob_acuities"]
-        assert sum(self.prob_acuities) == 1, "Acuities distribution does not sum to 1"
-        self.weighted_wait = config["weighted_wait"]
-        self.order = config["order"]
-        self.spawn = config["spawn"]
-        self.treatment_times = config["treatment_times"]
+        self.resources = config["resources"]
+        self.treatments = config["treatments"]
+        self.patterns = config["patterns"]
+        self.patient_distribution = config["patient_distribution"]
+        self.patient_params = config["patient_params"]
+        self.patient_priority_func = config["patient_priority_func"]
+        self.warm_up_time = config["warm_up_time"]
         self.max_time = config["max_time"]
-        self.set_seed = config["set_seed"]
+        self.set_seed = config["seed"]
 
         # gym arguments
-        self.action_space = spaces.MultiDiscrete([self.types_resources, self.acuities])
-        empty = np.zeros([self.types_resources, self.acuities])
-        high = np.ones_like(empty)
+        self.action_space = spaces.MultiDiscrete(
+            [len(self.acuities), len(self.treatments)] for _ in range(len(self.resources))
+        )
+        empty = np.zeros(self.action_space.nvec)
+        high = np.ones(self.action_space.nvec)
         self.observation_space = spaces.Box(empty, high, dtype=np.float64)
-        self.seed(self.set_seed)
-        
+
+        self.reset()
+
     def step(self, action):
         """
-        Action is of the form (resource_type, acuity)
-        Assign patient with longest waiting time of the given acuity and waiting for resource_type to resource_type
+        Action is of the form
+        [(acuity, treatment), (acuity, treatment), ...]
+        for each respective resource
         """
-        resource_type = action[0]
-        acuity = action[1]
-        print(self.queues)
-        assert self.free_resources[resource_type] > 0, "Invalid resource type"
-        assert len(self.queues[resource_type][acuity]) > 0, "Invalid patient acuity"
-        curr_queue = self.queues[resource_type][acuity]
+        for resource, (acuity, treatment) in enumerate(action):
+            pool = self.pools[resource][(acuity, treatment)]
+            if not pool:
+                continue
+            patient_id = max(pool, key=self.patient_priority_func)
+            pool.remove(patient_id)
+            patient = self.patients[patient_id]
+            event = self._treat(patient)
+            if event:
+                heapq.heappush(self.events_heap, event)
 
-        # Get longest waiting patient
-        patient_queue = list(map(lambda x: self.patients[x], curr_queue))
-        waiting = list(map(lambda x: (self.time - x.start_wait + x.waiting_time, x.id), patient_queue))
-        patient_id = sorted(waiting, reverse=True)[0][1]
-
+    def _treat(self, patient):
+        treatment_id = patient.order_ids[patient.order_idx]
+        resource_id = self.treatments[treatment_id]['resource_id']
+        self.resource_id
         # Process patient
         curr_queue.remove(patient_id)
         self.free_resources[resource_type] -= 1
@@ -80,28 +86,35 @@ class EDPSEnv(gym.Env):
 
     def reset(self):
         self.seed(self.set_seed)
-        self.patients = {}
-        self.events_heap = []  # will be used as a heapq of (time, patient id, free resource, next resource to queue)
-        self.queues = {}  # dictionary of resource to acuity to list of patient numbers
-        self.free_resources = self.resources.copy()
-        for i in range(self.types_resources):
-            d = {}
-            for j in range(self.acuities):
-                d[j] = []
-            self.queues[i] = d
         self.time = 0
-        self.next_patient_no = 0
+        self.patients = []
+        self.events_heap = []  # will be used as a heapq of (time, patient id, resource to free, resource to queue)
+        self.queues = defaultdict(lambda: defaultdict(list))  # dictionary of resource: (acuity, treatment): list of patient numbers
+        self.free_resources = {i: resource['quantity'] for i, resource in enumerate(self.resources)}
+        get_spawn_interval = lambda: get_distribution_function(self.rng, self.patient_distribution, self.patient_params)
 
         # Spawn all patients
         spawn_time = 0
         while spawn_time < self.max_time:
-            patient_num = self._spawn_patient(0)
-            start_res = self.patients[patient_num].get_next_resource()
-            heapq.heappush(self.events_heap, (spawn_time, patient_num, None, start_res))
-            spawn_time += self.rng.poisson(self.spawn)
+            spawn_time += get_spawn_interval()
+            acuity = self.rng.choice(np.arange(self.acuities), p=self.acuities_prob)
+            pattern = self.rng.choice(np.arange(self.patterns), p=self.patterns_prob)
+            patient_id = len(self.patients)
+            patient = Patient(patient_id, spawn_time, acuity, pattern["order_ids"])
+            self.patients.append(patient)
+            res = self._send_to_queue(self.patients[patient_id])
+            heapq.heappush(self.events_heap, (spawn_time, patient_num, None, res))
 
         self._process_events()
         return self._get_state()
+
+    def _send_to_queue(self, patient):
+        treatment_id = patient.order_ids[patient.order_idx]
+        resource_id = self.treatments[treatment_id]['resource_id']
+        priority = self.patient_priority_func(patient)
+        event()
+        self.queues[resource_id].append()
+        order_idx += 1
 
     def seed(self, seed=None):
         self.rng = np.random.default_rng(seed)
@@ -113,15 +126,6 @@ class EDPSEnv(gym.Env):
         d["time"] = self.time
         d["free_resources"] = self.free_resources
         return d
-
-    def _spawn_patient(self, time):
-        acuity = self.rng.choice(np.arange(self.acuities), p=self.prob_acuities)
-        processing_time = {}
-        for res_type in range(self.types_resources):
-            processing_time[res_type] = self.rng.poisson(self.treatment_times[res_type][acuity])
-        self.patients[self.next_patient_no] = Patient(time, acuity, self.order.copy(), processing_time, self.next_patient_no)
-        self.next_patient_no += 1
-        return self.next_patient_no - 1
 
     def _get_state(self):
         """
@@ -139,17 +143,18 @@ class EDPSEnv(gym.Env):
         # Check if simulation is over
         if self.time >= self.max_time:
             return True
-
-        # Check if there are still valid actions at current timestep
-        for res_type in range(self.types_resources):
-            if self.free_resources[res_type] > 0:
-                for ac in range(self.acuities):
-                    if len(self.queues[res_type][ac]) > 0:
-                        return False
         
         # No more valid actions and no more events
         if len(self.events_heap) == 0:
             return True
+
+        # Check if there are still valid actions at current timestep
+        if any()
+        for resource in range(len(self.resources)):
+            if self.free_resources[resource] > 0:
+                for ac in range(self.acuities):
+                    if len(self.queues[res_type][ac]) > 0:
+                        return False
         
         # No more valid actions at current timestep, skip to next event
         next_event = self.events_heap[0]
@@ -204,7 +209,6 @@ class Patient:
         self.start_wait = arrival
         self.acuity = acuity
         self.order = order
-        self.treatments = treatments
         self.id = id
         self.waiting_time = 0
 

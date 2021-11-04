@@ -1,0 +1,174 @@
+{
+    "acuities": [
+        {
+            "label": "1",
+            "weighted_waiting_time": 30,
+            "weighted_acuity": 5,
+            "weighted_occurrence": 10
+        },
+        {
+            "label": "2",
+            "weighted_waiting_time": 15,
+            "weighted_acuity": 4,
+            "weighted_occurrence": 30
+        },
+        {
+            "label": "3",
+            "weighted_waiting_time": 1,
+            "weighted_acuity": 3,
+            "weighted_occurrence": 40
+        },
+        {
+            "label": "4",
+            "weighted_waiting_time": 1,
+            "weighted_acuity": 2,
+            "weighted_occurrence": 10
+        },
+        {
+            "label": "5",
+            "weighted_waiting_time": 1,
+            "weighted_acuity": 1,
+            "weighted_occurrence": 10
+        }
+    ],
+    "resources": [
+        {
+            "label": "Doctor",
+            "quantity": 3
+        },
+        {
+            "label": "Nurse",
+            "quantity": 5
+        },
+        {
+            "label": "X-ray technician",
+            "quantity": 1
+        },
+        {
+            "label": "CT technician",
+            "quantity": 1
+        }
+    ],
+    "treatments": [
+        {
+            "label": "A",
+            "description": "Triage",
+            "distribution": "expo",
+            "params": [7],
+            "resource": "Doctor"
+        },
+        {
+            "label": "B",
+            "description": "Registration",
+            "distribution": "expo",
+            "params": [5.5],
+            "resource": "Nurse"
+        },
+        {
+            "label": "C",
+            "description": "Evaluation",
+            "distribution": "normal",
+            "params": [14, 6],
+            "resource": "Doctor"
+        },
+        {
+            "label": "D",
+            "description": "Laboratory",
+            "distribution": "normal",
+            "params": [35, 15],
+            "resource": "Nurse"
+        },
+        {
+            "label": "E",
+            "description": "X-ray",
+            "distribution": "expo",
+            "params": [12],
+            "resource": "X-ray technician"
+        },
+        {
+            "label": "F",
+            "description": "Consultation",
+            "distribution": "normal",
+            "params": [15, 8],
+            "resource": "Nurse"
+        },
+        {
+            "label": "G",
+            "description": "CT scan",
+            "distribution": "normal",
+            "params": [29, 14],
+            "resource": "CT technician"
+        },
+        {
+            "label": "H",
+            "description": "Discharge",
+            "distribution": "constant",
+            "params": [30],
+            "resource": "Nurse"
+        },
+        {
+            "label": "I",
+            "description": "Discharge (admission)",
+            "distribution": "expo",
+            "params": [3],
+            "resource": "Nurse"
+        }
+    ],
+    "patterns": [
+        {
+            "label": "1",
+            "order": ["A", "B", "C", "H"],
+            "weight": 1
+        },
+        {
+            "label": "2",
+            "order": ["A", "B", "C", "E", "H"],
+            "weight": 1
+        },
+        {
+            "label": "3",
+            "order": ["A", "B", "C", "D", "E", "H"],
+            "weight": 1
+        },
+        {
+            "label": "4",
+            "order": ["A", "B", "C", "F", "H"],
+            "weight": 1
+        },
+        {
+            "label": "5",
+            "order": ["A", "B", "C", "D", "E", "F", "H"],
+            "weight": 1
+        },
+        {
+            "label": "6",
+            "order": ["A", "B", "C", "D", "H"],
+            "weight": 1
+        },
+        {
+            "label": "7",
+            "order": ["A", "B", "C", "E", "D", "H"],
+            "weight": 1
+        },
+        {
+            "label": "8",
+            "order": ["A", "B", "C", "G", "H"],
+            "weight": 1
+        },
+        {
+            "label": "9",
+            "order": ["A", "B", "C", "G", "E", "F", "I"],
+            "weight": 1
+        },
+        {
+            "label": "10",
+            "order": ["A", "B", "C", "D", "I"],
+            "weight": 1
+        },
+        {
+            "label": "11",
+            "order": ["A", "B", "C", "E", "D", "I"],
+            "weight": 1
+        }
+    ]
+}
