@@ -33,8 +33,9 @@ class EDPSEnv(gym.Env):
         self.prob_acuities = config["prob_acuities"]
         assert sum(self.prob_acuities) == 1, "Acuities distribution does not sum to 1"
         self.weighted_wait = config["weighted_wait"]
-        self.order = config["order"]
+        self.orders = config["orders"]
         self.spawn = config["spawn"]
+        self.treatment2resource = config["treatment2resource"]
         self.treatment_times = config["treatment_times"]
         self.max_time = config["max_time"]
         self.set_seed = config["set_seed"]
@@ -116,10 +117,8 @@ class EDPSEnv(gym.Env):
 
     def _spawn_patient(self, time):
         acuity = self.rng.choice(np.arange(self.acuities), p=self.prob_acuities)
-        processing_time = {}
-        for res_type in range(self.types_resources):
-            processing_time[res_type] = self.rng.poisson(self.treatment_times[res_type][acuity])
-        self.patients[self.next_patient_no] = Patient(time, acuity, self.order.copy(), processing_time, self.next_patient_no)
+        order = self.rng.choice(self.orders).copy()
+        self.patients[self.next_patient_no] = Patient(time, acuity, order, self.treatment_times, self.treatment2resource, self.next_patient_no)
         self.next_patient_no += 1
         return self.next_patient_no - 1
 
@@ -199,12 +198,13 @@ class EDPSEnv(gym.Env):
         return False
 
 class Patient:
-    def __init__(self, arrival, acuity, order, treatments, id):
+    def __init__(self, arrival, acuity, order, treatments, treatment2resource_mapping, id):
         self.arrival = arrival
         self.start_wait = arrival
         self.acuity = acuity
         self.order = order
         self.treatments = treatments
+        self.treatment2resource = treatment2resource_mapping
         self.id = id
         self.waiting_time = 0
 
@@ -213,17 +213,17 @@ class Patient:
             return self.order[0]
         raise AttributeError("Patient is no longer queueing!")
 
-    def get_treatment_time(self, resource_type):
-        return self.treatments[resource_type]
-    
     def process(self, time):
         if self.order:
             waited = time - self.start_wait
             self.waiting_time += waited
-            self.start_wait = time + self.treatments[self.order[0]]
-            original = self.order.pop(0)
+            curr_treatment = self.order.pop(0)
+            curr_resource = self.treatment2resource[curr_treatment]
+            self.start_wait = time + self.treatments[curr_resource][curr_treatment]
             if len(self.order) > 0:
-                return (self.start_wait, self.id, original, self.order[0])
+                next_treatment = self.order[0]
+                next_resource = self.treatment2resource[next_treatment]
+                return (self.start_wait, self.id, curr_resource, next_resource)
             else:
-                return (self.start_wait, self.id, original, None)
+                return (self.start_wait, self.id, curr_resource, None)
 
