@@ -1,6 +1,5 @@
 import gym
 
-
 class MaxStepWrapper(gym.Wrapper):
 
     def __init__(self, env, max_steps=1000):

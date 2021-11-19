@@ -8,6 +8,7 @@ default_config = {
     'framework': 'torch',
     'log_level': 'WARN',
     'num_gpus': 0,
+    # 'instance_path': 'JSS/instances/ta01',
     'instance_path': 'JSS/instances/covid01',
     'num_envs_per_worker': 2,
     'rollout_fragment_length': 1024,

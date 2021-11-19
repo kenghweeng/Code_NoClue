@@ -9,6 +9,14 @@ import time
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import CpSolverSolutionCallback
 
+import sys
+import gym
+import imageio
+
+try: 
+    instance_filename = sys.argv[1]
+except: 
+    instance_filename = 'covid01'
 
 class WandbCallback(CpSolverSolutionCallback):
     """Display the objective value and time of intermediate solutions."""
@@ -30,15 +38,14 @@ class WandbCallback(CpSolverSolutionCallback):
         """Returns the number of solutions found."""
         return self.__solution_count
 
-import sys
-try: instance_filename = sys.argv[1]
-except: instance_filename = 'covid01'
 
 machine2label=['registration', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
 
+# def MinimalJobshopSat(instance_config= {'instance_path': 'instances/ta51'}):
 def MinimalJobshopSat(instance_config= {'instance_path': f'JSS/instances/{instance_filename}'}):
     # wandb.init(config=instance_config)
     # config = wandb.config
+
     config = instance_config
     """Minimal jobshop problem."""
     # Create the model.
@@ -116,7 +123,11 @@ def MinimalJobshopSat(instance_config= {'instance_path': f'JSS/instances/{instan
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 600.0
     # wandb_callback = WandbCallback()
+    # status = solver.SolveWithSolutionCallback(model, wandb_callback)
     status = solver.SolveWithSolutionCallback(model, None)
+
+    # Generation of Gantt chart with solution generated from OR solver,
+    # can comment out all code below if not planning to plot Gantt chart for this solution
     if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
         # Create one list of assigned tasks per machine.
         assigned_jobs = collections.defaultdict(list)
@@ -137,9 +148,6 @@ def MinimalJobshopSat(instance_config= {'instance_path': f'JSS/instances/{instan
         # print(solution_sequence)
     else:
         print('No solution found.')
-    
-    import gym
-    import imageio
 
     # http://optimizizer.com/solution.php?name=ta01&UB=1231&problemclass=ta
     env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': f'JSS/instances/{instance_filename}'})

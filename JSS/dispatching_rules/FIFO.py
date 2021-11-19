@@ -21,6 +21,7 @@ def FIFO_worker(default_config):
     # wandb.init(config=default_config)
     # config = wandb.config
     config = default_config
+    # env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': config['instance_path']})
     env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': INSTANCE_PATH})
     env.seed(config['seed'])
     random.seed(config['seed'])
@@ -39,17 +40,20 @@ def FIFO_worker(default_config):
         FIFO_action = np.argmax(remaining_time)
         assert legal_actions[FIFO_action]
         state, reward, done, _ = env.step(FIFO_action)
+
         # print("rendering")
         # temp_image = env.render(machine2label=machine2label).to_image()
         # images.append(imageio.imread(temp_image))
         # print("rendered")
+
     # print(env.solution.T.argsort().tolist())
+
     env.reset()
     make_span = env.last_time_step
-    # print("Completed simulation")
-    # imageio.mimsave(OUTPUT_GIF_PATH, images, format='GIF', fps=2)
-    print(make_span)
+    # wandb.log({"nb_episodes": 1, "make_span": make_span})
 
+    # print("Completed simulation")
+    # imageio.mimsave(OUTPUT_GIF_PATH, images, format='GIF', fps=2) 
     # wandb.log({"nb_episodes": 1, "make_span": make_span})
 
 
