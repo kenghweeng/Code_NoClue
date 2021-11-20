@@ -1,5 +1,5 @@
+import sys
 import time
-
 import ray
 import wandb
 import random
@@ -11,6 +11,7 @@ from CustomCallbacks import *
 from models import *
 from typing import Dict, Tuple
 import multiprocessing as mp
+import pickle
 from ray.rllib.agents import with_common_config
 from ray.rllib.models import ModelCatalog
 from ray.tune.utils import flatten_dict
@@ -59,14 +60,14 @@ def env_creator(env_config):
 
 register_env("jss_env", env_creator)
 
-def train_func():
+def train_func(input_file):
     default_config = {
         'env': 'jss_env',
         'seed': 5446,
         'framework': 'tf',
         'log_level': 'WARN',
         'num_gpus': 3,
-        'instance_path': 'instances/ta01', 
+        'instance_path': f'instances/{input_file}', 
         # 'instance_path': 'instances/covid01',
         'evaluation_interval': None,
         'metrics_smoothing_episodes': 2000,
@@ -158,10 +159,29 @@ def train_func():
         # wandb.config.update(config_update, allow_val_change=True)
     # trainer.export_policy_model("./models/")
     best_makespan, best_solution = ray.get(storage.get_best_solution.remote())
-    print(best_makespan)
-    print(best_solution)
-    ray.shutdown()
+    
+    # try:
+    #     fname = config['env_config']['env_config']['instance_path'])
+    # except:
+    #     print("what")
+
+    return best_makespan, best_solution
 
 
 if __name__ == "__main__":
-    train_func()
+    _, input_file = sys.argv
+    best_makespan, best_solution = train_func(input_file)
+    print(best_solution)
+    print(best_makespan)
+
+    with open(f'solutions/{input_file}_sol.pkl', 'wb') as f:
+        pickle.dump(best_solution, f)
+        
+    # Based on stored solution, generate Gantt chart
+    
+
+
+
+
+
+    
