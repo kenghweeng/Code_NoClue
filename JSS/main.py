@@ -159,25 +159,17 @@ def train_func(input_file):
         # wandb.config.update(config_update, allow_val_change=True)
     # trainer.export_policy_model("./models/")
     best_makespan, best_solution = ray.get(storage.get_best_solution.remote())
-    
-    # try:
-    #     fname = config['env_config']['env_config']['instance_path'])
-    # except:
-    #     print("what")
 
     return best_makespan, best_solution
-
 
 if __name__ == "__main__":
     _, input_file = sys.argv
     best_makespan, best_solution = train_func(input_file)
-    print(best_solution)
-    print(best_makespan)
 
+    solution_dict = {'solution': best_solution, 'makespan': best_makespan}
+    print(solution_dict)
     with open(f'solutions/{input_file}_sol.pkl', 'wb') as f:
-        pickle.dump(best_solution, f)
-        
-    # Based on stored solution, generate Gantt chart
+        pickle.dump(solution_dict, f)
     
 
 
