@@ -30,6 +30,8 @@ html_temp = """
 @st.cache
 def load_image(img):
 	im =Image.open(os.path.join(img))
+	print(os.path.join(img))
+	print(os.getcwd())
 	return im
 
 def main():
