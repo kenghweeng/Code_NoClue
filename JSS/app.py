@@ -1,201 +1,247 @@
-# Core Pkg
 import streamlit as st 
+import pandas as pd
+import numpy as np
+import os
+import pickle
+import plotly.figure_factory as ff
+import datetime
+import time
+
+import matplotlib.pyplot as plt 
+import matplotlib
+matplotlib.use('Agg')
+
+PAGE_CONFIG = {"page_title": "Code: No Clue", "page_icon": ":smiley:", "layout": "wide"}
+st.set_page_config(**PAGE_CONFIG)
 
 # TEXT
 # title
-st.title("Streamlit Crash Course")
+html_temp = """
+		<div style="background-color:{};padding:10px;border-radius:10px">
+		<h1 style="color:white;text-align:center;">Reinforcement Learning on Patient Scheduling </h1>
+		<h5 style="color:white;text-align:center;">Project: Code No Clue </h5>
+		</div>
+		<p>
+		"""
 
-# header/subheader
-st.header("This is a header")
 
-st.subheader("This is a subheader")
+@st.cache
+def load_image(img):
+	im =Image.open(os.path.join(img))
+	return im
 
-# text
-st.text("This is so cool")
+def main():
+	st.markdown(html_temp.format('royalblue'),unsafe_allow_html=True)
 
-# MARKDOWN
-st.markdown("# This is markdown")
+	menu = ["Home","My Schedule"]
+	sub_menu = ["Plot","Prediction","Metrics"]
 
-# Links
-st.markdown("[Google](https://google.com)")
+	choice = st.sidebar.selectbox("Menu",menu)
 
-url_link = "https://jcharistech.com"
+	if choice == "Home":
+		st.header("Project Background:")
+		st.markdown("This application aims to realize the application of deep reinforcement learning to the healthcare setting, and was largely inspired by this particular [paper](https://arxiv.org/abs/2104.03760) written by Tassel et.al just this year! As you might have noticed, this project was named **Code No Clue**.\
+			The name was intended to be a double entendre.")
+		st.markdown("Firstly, it\'s meant to be a rhymy pun on the well-known term denoting an healthcare emergency: Code Blue. We adptly noted that in the healthcare setting, dealing with patients struck with dire conditions can be overwhelming and we may not know what the best \
+				way to schedule the treatments for these patients could be. After talking to connections whom are currently working in the healthcare sector, we noted that the current scheduling procedure follows traditional, albeit, reasonable heuristics. Some of these heuristics \
+				are (i) **FIFO -** **F**irst **I**n **F**irst **O**ut (more relevantly, First Come First Serve), (ii) **MWKR -** Patient with **M**aximum **W**or**k** **R**emaining. We identified the opportunity to apply reinforcement-learning to learn a better scheduler for patient treatments.")
 
-st.markdown(url_link)
+		st.markdown("Secondly, the name was meant to be a joke on how we tend to write code, which may or may not work but we have no idea why! :laughing:")
+		
+		st.header("Project Objective:")
+		# talk about objective, makespan, Map to JSS, patients, resource groups,
 
-# Custom Color/Style
-# html_page = """
-# <div style="background-color:tomato;padding:50px">
-# 	<p style="font-size:50px">Streamlit is Awesome</p>
-	
-# </div>
-# """
-# st.markdown(html_page,unsafe_allow_html=True)
+		st.header("Data Specifications:")
+		
+		st.header("Plots")
 
-# html_form = """
-# <div>
-# 	<form>
-# 	<input type="text" name="firstname"/>
+		# MARKDOWN
+		st.markdown("# This is markdown")
 
-# 	</form>
-# </div>
-# """
+		# Links
+		st.markdown("[Google](https://google.com)")
 
-# st.markdown(html_form,unsafe_allow_html=True)
+		url_link = "https://jcharistech.com"
 
+		st.markdown(url_link)
 
-# Boostrap Alert/Color Text
-st.success("Succcess!")
+		# Custom Color/Style
+		# html_page = """
+		# <div style="background-color:tomato;padding:50px">
+		# 	<p style="font-size:50px">Streamlit is Awesome</p>
+			
+		# </div>
+		# """
+		# st.markdown(html_page,unsafe_allow_html=True)
 
-st.info("Information")
-st.warning("This is a warning")
-st.error("This is an error")
+		# html_form = """
+		# <div>
+		# 	<form>
+		# 	<input type="text" name="firstname"/>
 
-st.exception('NameError()')
+		# 	</form>
+		# </div>
+		# """
 
-# MEDIA
-# Images
-from PIL import Image
-img = Image.open("example.jpeg")
-st.image(img,width=300,caption="Streamlit Image")
+		# st.markdown(html_form,unsafe_allow_html=True)
 
-# # Audio
-# audio_file = open('example.mp3',"rb")
-# audio_bytes = audio_file.read()
-# st.audio(audio_bytes,format="audio/mp3")
 
-# # Video
-# video_file = open("example.mp4","rb")
-# video_bytes = video_file.read()
-# st.video(video_bytes)
+		# Boostrap Alert/Color Text
+		st.success("Succcess!")
 
+		st.info("Information")
+		st.warning("This is a warning")
+		st.error("This is an error")
 
-# Video URL/YTB
-# st.video("https://www.youtube.com/watch?v=_9WiB2PDO7k")
+		st.exception('NameError()')
 
+		# MEDIA
+		# Images
+		from PIL import Image
+		img = Image.open("example.jpeg")
+		st.image(img,width=300,caption="Streamlit Image")
 
-# WIDGET
-st.button("Submit")
+		# # Audio
+		# audio_file = open('example.mp3',"rb")
+		# audio_bytes = audio_file.read()
+		# st.audio(audio_bytes,format="audio/mp3")
 
-if st.button("Play"):
-	st.text("Hello world")
+		# # Video
+		# video_file = open("example.mp4","rb")
+		# video_bytes = video_file.read()
+		# st.video(video_bytes)
 
-# Checkbox
-if st.checkbox("Show/hide"):
-	st.success("Hiding or Showing")
 
-# Radio
-gender = st.radio("Your Gender",["Male","Female"])
+		# Video URL/YTB
+		# st.video("https://www.youtube.com/watch?v=_9WiB2PDO7k")
 
-if gender == 'Male':
-	st.info("Is a male")
 
-# Select
-location = st.selectbox("Your Location",["UK","USA","India","Accra"])
+		# WIDGET
+		st.button("Submit")
 
+		if st.button("Play"):
+			st.text("Hello world")
 
-# Multiselect
-occupation = st.multiselect("Your Occupation",["Developer","Doctor","BusinessMan","Banker"])
+		# Checkbox
+		if st.checkbox("Show/hide"):
+			st.success("Hiding or Showing")
 
+		# Radio
+		gender = st.radio("Your Gender",["Male","Female"])
 
-# TEXT INPUT
-name = st.text_input("Your Name","Type Here")
-st.text(name)
+		if gender == 'Male':
+			st.info("Is a male")
 
-# NUMBER INPUT
-age = st.number_input("Age")
+		# Select
+		location = st.selectbox("Your Location",["UK","USA","India","Accra"])
 
-# TEXT_AREA
-message = st.text_area("Your Message","Type here")
 
-# SLider
-level = st.slider("Your Level",2,6)
+		# Multiselect
+		occupation = st.multiselect("Your Occupation",["Developer","Doctor","BusinessMan","Banker"])
 
-# Balloons
-# st.balloons()
 
+		# TEXT INPUT
+		name = st.text_input("Your Name","Type Here")
+		st.text(name)
 
+		# NUMBER INPUT
+		age = st.number_input("Age")
 
-# DATA SCIENCE
-st.write(range(10))
+		# TEXT_AREA
+		message = st.text_area("Your Message","Type here")
 
-#DATAFRAME
+		# SLider
+		level = st.slider("Your Level",2,6)
 
-import pandas as pd 
-df = pd.read_csv("iris.csv")
+		# Balloons
+		# st.balloons()
 
- #M1
-st.dataframe(df.head())
-# #M2
-# st.write(df.head())
 
 
-# TABLES
+		# DATA SCIENCE
+		st.write(range(10))
 
-st.table(df.head())
-# PLOT
+		#DATAFRAME
 
-# Plot Pkgs
-import matplotlib.pyplot as plt 
-import seaborn as sns 
+		import pandas as pd 
+		df = pd.read_csv("iris.csv")
 
-# # Area_chart
-# st.area_chart(df.head(20))
-# # Bar_chart
+		#M1
+		st.dataframe(df.head())
+		# #M2
+		# st.write(df.head())
 
-# st.bar_chart(df.head(20))
-# # Line Chart
 
-# st.line_chart(df)
+		# TABLES
 
-# Heatmap
-# c_plot = sns.heatmap(df.corr(),annot=True)
-# st.write(c_plot)
-# st.pyplot()
+		st.table(df.head())
+		# PLOT
 
-# Altair
-# Vega
-# D
+		# Plot Pkgs
+		import matplotlib.pyplot as plt 
+		import seaborn as sns 
 
-# Date/Time
-import datetime 
-today = st.date_input("Today is",datetime.datetime.now())
+		# # Area_chart
+		# st.area_chart(df.head(20))
+		# # Bar_chart
 
+		# st.bar_chart(df.head(20))
+		# # Line Chart
 
-import time
-the_time = st.time_input("The time is",datetime.time(10,0))
+		# st.line_chart(df)
 
+		# Heatmap
+		# c_plot = sns.heatmap(df.corr(),annot=True)
+		# st.write(c_plot)
+		# st.pyplot()
 
-# Display JSON,CODE
-data = {"name":"John","salar":50000}
-st.json(data)
+		# Altair
+		# Vega
+		# D
 
-# Display Code
-st.code("import numpy as np")
+		# Date/Time
+		today = st.date_input("Today is",datetime.datetime.now())
 
-st.code("import numpy as np",language='python')
 
-julia_code ="""
-function doit(num::int)
-	println(num)
-end
-"""
+		the_time = st.time_input("The time is",datetime.time(10,0))
 
-st.code(julia_code,language='julia')
 
-# with st.echo():	# show code block.
-# 	# This is a comment
-# 	import textblob
+		# Display JSON,CODE
+		data = {"name":"John","salar":50000}
+		st.json(data)
 
-# Progressbar
-import time 
-my_bar = st.progress(0)
-for p in range(10):
-	my_bar.progress(p+1)
+		# Display Code
+		st.code("import numpy as np")
 
-# Spinner
+		st.code("import numpy as np",language='python')
 
-with st.spinner("Waiting..."):
-	time.sleep(5)
-st.success("Finished")
+		julia_code ="""
+		function doit(num::int)
+			println(num)
+		end
+		"""
 
+		st.code(julia_code,language='julia')
+
+		# with st.echo():	# show code block.
+		# 	# This is a comment
+		# 	import textblob
+
+		# Progressbar
+		import time 
+		my_bar = st.progress(0)
+		for p in range(10):
+			my_bar.progress(p+1)
+
+		# Spinner
+
+		with st.spinner("Waiting..."):
+			time.sleep(5)
+		st.success("Finished")
+
+	elif choice == "My Schedule":
+		st.subheader("Now you can have a clue!")
+
+
+if __name__ == '__main__':
+	main()
