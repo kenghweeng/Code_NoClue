@@ -78,7 +78,6 @@ def main():
 		with st.spinner("Waiting..."):
 			import time
 			time.sleep(3)
-		st.subheader("Example Input Format:")
 		if patient_count == 2:
 			st.success(f"Looking at the simulation for {patient_count} patients:")
 			st.write(
@@ -180,13 +179,14 @@ def main():
 				"""
 			)
 
-		
-		st.text("Explanation")
-		st.subheader("Gantt chart for FIFO heuristic")
-		st.markdown(f"![FIFO for {patient_count} patients]({FIFO_GIF})")
+		if type(patient_count) == int:
+			st.subheader("Example Input Format:")
+			st.text("Explanation")
+			st.subheader("Gantt chart for FIFO heuristic")
+			st.markdown(f"![FIFO for {patient_count} patients]({FIFO_GIF})")
 
-		st.subheader("Gantt chart for RL heuristic")
-		st.markdown(f"![RL for {patient_count} patients]({RL_GIF})")
+			st.subheader("Gantt chart for RL heuristic")
+			st.markdown(f"![RL for {patient_count} patients]({RL_GIF})")
 		
 
 # 		# MARKDOWN
