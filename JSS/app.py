@@ -30,8 +30,6 @@ html_temp = """
 @st.cache
 def load_image(img):
 	im =Image.open(os.path.join(img))
-	print(os.path.join(img))
-	print(os.getcwd())
 	return im
 
 def main():
@@ -102,7 +100,9 @@ def main():
 		# MEDIA
 		# Images
 		# img = Image.open("images/covid2_1.png")
-		st.image(load_image('images/covid2_1.png'))
+		st.image("https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid2_1.png?raw=true")
+		"""### gif from url"""
+		st.markdown("![Alt Text](https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid2_1.gif?raw=true)")
 
 # 		"""### gif from local file"""
 # 		file_ = open("images/covid2_1.gif", "rb")
@@ -114,7 +114,6 @@ def main():
 # 			f'<img src="data:image/gif;base64,{data_url}" alt="cat gif">',
 # 			unsafe_allow_html=True,
 # )
-# 		st.image(img,caption="Streamlit Image")
 
 		# # Audio
 		# audio_file = open('example.mp3',"rb")
