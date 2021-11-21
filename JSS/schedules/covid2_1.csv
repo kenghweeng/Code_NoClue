@@ -1,0 +1,11 @@
+Task,Start,Finish,Resource
+Patient 1,09:03:00,09:05:00,registration
+Patient 1,09:21:00,09:26:00,consultation
+Patient 1,09:26:00,09:30:00,x_ray
+Patient 1,09:54:00,10:29:00,ct_scan
+Patient 1,10:29:00,10:35:00,dispensary
+Patient 2,09:00:00,09:03:00,registration
+Patient 2,09:03:00,09:21:00,consultation
+Patient 2,09:21:00,09:54:00,ct_scan
+Patient 2,09:54:00,10:03:00,x_ray
+Patient 2,10:03:00,10:17:00,dispensary

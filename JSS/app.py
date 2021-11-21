@@ -353,8 +353,32 @@ def main():
 # 			time.sleep(5)
 # 		st.success("Finished")
 
-	elif choice == "My Schedule":
+	elif choice == "For Staff:":
+		st.subheader("Timetable for XYZ Hospital:")
+		patient_count = st.selectbox("Patient Count:", ["-- Select --", 2,5,10,15,20])
+		with st.spinner("Waiting..."):
+			import time
+			time.sleep(2)
+		if type(patient_count) == int:
+			st.info("Here is the timetable for {} patients".format(patient_count))
+			st.image(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid{patient_count}_1.png?raw=true")
+	
+	elif choice == "For Patients:":
 		st.subheader("Now you can have a clue!")
+		patient_count = st.selectbox("Patient Count:", ["-- Select --", 2,5,10,15,20])
+		with st.spinner("Waiting..."):
+			import time
+			time.sleep(2)
+
+		if type(patient_count) == int:
+			st.info("Here is the timetable for {} patients".format(patient_count))
+			st.image(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid{patient_count}_1.png?raw=true")
+
+
+
+
+
+		
 
 if __name__ == '__main__':
 	main()

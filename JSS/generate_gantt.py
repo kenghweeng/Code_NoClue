@@ -91,8 +91,11 @@ class GanttChart:
         if len(df) > 0:
             self.df = pd.DataFrame(df)
             self.plot_df = pd.DataFrame(head_df + df)
-
-            return self.df
+            clean_df = self.df.drop(columns=["Task_Num", "Resource_Num"], axis=1)
+            clean_df["Start"] = clean_df["Start"].dt.strftime("%H:%M:%S")
+            clean_df["Finish"] = clean_df["Finish"].dt.strftime("%H:%M:%S")
+            clean_df.to_csv(f'schedules/{self.instance}.csv', index=False)
+            # return self.df
 
     def generate_chart(self):
         self.colors = [
