@@ -1,4 +1,5 @@
 import bisect
+from collections import defaultdict
 import datetime
 import random
 
@@ -60,7 +61,8 @@ class JssEnv(gym.Env):
         self.action_illegal_no_op = None
         self.machine_legal = None
         # initial values for variables used for representation
-        self.start_timestamp = datetime.datetime.now().timestamp()
+        self.start_timestamp = datetime.datetime.fromtimestamp(5400).timestamp()
+        # self.start_timestamp = datetime.datetime.now().timestamp()
         self.sum_op = 0
         instance_file = open(instance_path, 'r')
         line_str = instance_file.readline()
@@ -101,6 +103,7 @@ class JssEnv(gym.Env):
         # allocate a job + one to wait
         self.action_space = gym.spaces.Discrete(self.jobs + 1)
         # used for plotting
+        random.seed(0)
         self.colors = [
             tuple([random.random() for _ in range(3)]) for _ in range(self.machines)
         ]
@@ -285,6 +288,9 @@ class JssEnv(gym.Env):
     def _reward_scaler(self, reward):
         return reward / self.max_time_op
 
+    def increase_time_step(self):
+        self._increase_time_step()
+
     def _increase_time_step(self):
         """
         The heart of the logic his here, we need to increase every counter when we have a nope action called
@@ -353,18 +359,27 @@ class JssEnv(gym.Env):
             return True
         return False
 
-    def render(self, mode='human'):
+    def render(self, mode='human', machine2label=None):
         df = []
         for job in range(self.jobs):
+            # make all jobs appear in GIF
+            for i in range(self.machines):
+                dict_op = dict()
+                dict_op["Task"] = 'Patient {}'.format(job)
+                dict_op["Start"] = datetime.datetime.fromtimestamp(self.start_timestamp-1e-9)
+                dict_op["Finish"] = datetime.datetime.fromtimestamp(self.start_timestamp-1e-9)
+                dict_op["Resource"] = machine2label[self.instance_matrix[job][i][0]] if machine2label else f"Doctor {self.instance_matrix[job][i][0]}"
+                df.append(dict_op)
+            print(df)
             i = 0
             while i < self.machines and self.solution[job][i] != -1:
                 dict_op = dict()
-                dict_op["Task"] = 'Job {}'.format(job)
-                start_sec = self.start_timestamp + self.solution[job][i]
-                finish_sec = start_sec + self.instance_matrix[job][i][1]
+                dict_op["Task"] = 'Patient {}'.format(job)
+                start_sec = self.start_timestamp + 60 * self.solution[job][i]
+                finish_sec = start_sec + 60 * self.instance_matrix[job][i][1]
                 dict_op["Start"] = datetime.datetime.fromtimestamp(start_sec)
                 dict_op["Finish"] = datetime.datetime.fromtimestamp(finish_sec)
-                dict_op["Resource"] = "Machine {}".format(self.instance_matrix[job][i][0])
+                dict_op["Resource"] = machine2label[self.instance_matrix[job][i][0]] if machine2label else f"Doctor {self.instance_matrix[job][i][0]}"
                 df.append(dict_op)
                 i += 1
         fig = None
@@ -372,5 +387,10 @@ class JssEnv(gym.Env):
             df = pd.DataFrame(df)
             fig = ff.create_gantt(df, index_col='Resource', colors=self.colors, show_colorbar=True,
                                   group_tasks=True)
+            fig.update_layout(
+            title='Patient scheduling',
+            xaxis_tickformat= '%H:%M:%S',
+            xaxis_title=f'Time (24-hour format)',
+        )
             fig.update_yaxes(autorange="reversed")  # otherwise tasks are listed from the bottom up
         return fig

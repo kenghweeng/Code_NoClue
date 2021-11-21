@@ -23,7 +23,7 @@ tf1, tf, tfv = try_import_tf()
 # To select for use of specific GPUs:
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="2,14,15"
+os.environ["CUDA_VISIBLE_DEVICES"]="2,5,7,8,9,10,14,15"
 _exclude_results = ["done", "should_checkpoint", "config"]
 
 # Use these result keys to update `wandb.config`
@@ -66,15 +66,15 @@ def train_func(input_file):
         'seed': 5446,
         'framework': 'tf',
         'log_level': 'WARN',
-        'num_gpus': 3,
+        'num_gpus': 8,
         'instance_path': f'instances/{input_file}', 
         # 'instance_path': 'instances/covid01',
         'evaluation_interval': None,
         'metrics_smoothing_episodes': 2000,
         'gamma': 1.0,
-        'num_workers': 15, # changed
+        'num_workers': 20, # changed
         'layer_nb': 2,
-        'train_batch_size': 15 * 4 * 704, # changed
+        'train_batch_size': 20 * 4 * 704, # changed
         'num_envs_per_worker': 4,
         'rollout_fragment_length': 704,  # TO TUNE
         'sgd_minibatch_size': 33000,

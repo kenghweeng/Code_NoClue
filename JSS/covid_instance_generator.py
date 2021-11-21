@@ -37,7 +37,7 @@ class Poisson(Distribution):
   def __init__(self, *params, **kwargs): super().__init__('poisson', params, **kwargs)
 class Constant(Distribution):
   def __init__(self, *params, **kwargs): super().__init__('constant', params, **kwargs)
-
+  
 steps = {
     'registration': Expo(5.5, qty=1),     # nurse
     'x_ray': Expo(12, qty=1),             # x-ray tech

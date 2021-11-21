@@ -7,16 +7,23 @@ import sys
 import pickle
 import random
 import imageio
-
-# refactor to expose method for generate CSV, then from CSV manipulate solution seq for rendering GIFs
+from env import JssEnv
 
 class GanttChart:
     def __init__(self, instance):
         self.instance = instance
-        self.start_timestamp = datetime.datetime.now().timestamp()
-        with open(f'solutions/{self.instance}_sol.pkl', 'rb') as f:
-            self.solution = pickle.load(f)
+        self.machine2label = ['registration', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
+        self.start_timestamp = datetime.datetime.fromtimestamp(5400).timestamp()
+        self.solution = None
         
+        try:
+            with open(f'solutions/{self.instance}_sol.pkl', 'rb') as f:
+                dict = pickle.load(f)
+                self.solution, self.solution_makespan = dict['solution'], dict['makespan']
+
+        except:
+            print("Solution not generated yet, need to use main.py to train RL agent first")
+
     def create_job_matrix(self):
         try:
             instance_file = open(f'instances/{self.instance}', 'r')
@@ -29,6 +36,7 @@ class GanttChart:
         line_cnt = 1
         while line_str:
             split_data = line_str.split()
+            print(split_data)
             if line_cnt == 1:
                 self.jobs, self.machines = int(split_data[0]), int(split_data[1])
                 # matrix which store tuple of (machine, length of the job)
@@ -47,56 +55,112 @@ class GanttChart:
                     i += 2
             line_str = instance_file.readline()
             line_cnt += 1
-        instance_file.close()    
+        instance_file.close()
 
-    def generate_from_timings(self):
+    def generate_gantt_csv(self):
+        if self.solution is None:
+            return "You need to first run main.py to generate solution for the input instance"
+
+        head_df = []
         df = []
-        self.colors = [
-            tuple([random.random() for _ in range(3)]) for _ in range(self.machines)
-        ]
         for job in range(self.jobs):
+            # set initial jobs to all appear in gantt
+            for i in range(self.machines):
+                dict_op = dict()
+                dict_op["Task"] = 'Patient {}'.format(job+1)
+                dict_op["Task_Num"] = job # used for pivoting later
+                dict_op["Start"] = datetime.datetime.fromtimestamp(self.start_timestamp-1e-9)
+                dict_op["Finish"] = datetime.datetime.fromtimestamp(self.start_timestamp-1e-9)
+                dict_op["Resource"] = self.machine2label[self.instance_matrix[job][i][0]]
+                dict_op["Resource_Num"] = self.instance_matrix[job][i][0]
+                head_df.append(dict_op)
+
             i = 0
             while i < self.machines and self.solution[job][i] != -1:
                 dict_op = dict()
-                dict_op["Task"] = 'Job {}'.format(job)
-                dict_op["Task_Num"] = job
-                start_sec = self.start_timestamp + self.solution[job][i]
-                finish_sec = start_sec + self.instance_matrix[job][i][1]
+                dict_op["Task"] = 'Patient {}'.format(job+1)
+                dict_op["Task_Num"] = job # used for pivoting later
+                start_sec = self.start_timestamp + 60 * self.solution[job][i]
+                finish_sec = start_sec + 60 * self.instance_matrix[job][i][1]
                 dict_op["Start"] = datetime.datetime.fromtimestamp(start_sec)
                 dict_op["Finish"] = datetime.datetime.fromtimestamp(finish_sec)
-                dict_op["Resource"] = "Machine {}".format(self.instance_matrix[job][i][0])
+                dict_op["Resource"] = self.machine2label[self.instance_matrix[job][i][0]]
                 dict_op["Resource_Num"] = self.instance_matrix[job][i][0]
-                
                 df.append(dict_op)
                 i += 1
 
-        fig = None
         if len(df) > 0:
-            df = pd.DataFrame(df)
+            self.df = pd.DataFrame(df)
+            self.plot_df = pd.DataFrame(head_df + df)
 
-            df.sort_values('Resource_Num', inplace=True)
-            df_grouped = df.groupby("Resource")
-            for name, group in df_grouped:
-                print(group.sort_values("Start"))
-                group.sort_values("Start", inplace=True)
-                print([job for job in group['Task'].values])
-                print([int(job.split(' ')[-1]) for job in group['Task'].values])
+            return self.df
+
+    def generate_chart(self):
+        self.colors = [
+            tuple([random.random() for _ in range(3)]) for _ in range(self.machines)
+        ]
             
-            fig = ff.create_gantt(df, index_col='Resource', colors=self.colors, show_colorbar=True,
-                                  group_tasks=True)
-            fig.update_yaxes(autorange="reversed")  # otherwise tasks are listed from the bottom up
-        
+        fig = ff.create_gantt(self.plot_df, index_col='Resource', colors=self.colors, show_colorbar=True,
+                                group_tasks=True)
+        fig.update_layout(
+            title='Patient scheduling',
+            xaxis_tickformat= '%H:%M:%S',
+            xaxis_title=f'Time (24-hour format) with makespan of {self.solution_makespan}',
+        )
+
+        fig.update_yaxes(autorange="reversed")  # otherwise tasks are listed from the bottom up
         print("rendering")
         temp_image = fig.to_image()
         imageio.imsave('test.png', imageio.imread(temp_image))
 
-    # def generate_from_sequence(self):
+
+    def generate_gif(self):
+        sol_seq = []
+        # Conversion of timings to solution sequence instead
+        sorted = self.df.sort_values(by=['Resource_Num', 'Start'])
+        df_grouped = sorted.groupby("Resource_Num")
+
+        for _, group in df_grouped:
+            sol_seq.append([int(job) for job in group['Task_Num'].values])
+        print(sol_seq)
+
+        env = JssEnv(env_config={'instance_path': f"instances/{self.instance}"})
+        env.reset()
+        # for every machine give the jobs to process in order for every machine
+        done = False
+        job_nb = len(sol_seq[0])
+        machine_nb = len(sol_seq)
+        index_machine = [0 for _ in range(machine_nb)]
+
+        step_nb = 0
+        images = []
+        while not done:
+            # if we haven't performed any action, we go to the next time step
+            no_op = True
+            for machine in range(len(sol_seq)):
+                if done:
+                    break
+                if env.machine_legal[machine] and index_machine[machine] < job_nb:
+                    action_to_do = sol_seq[machine][index_machine[machine]]
+                    if env.needed_machine_jobs[action_to_do] == machine and env.legal_actions[action_to_do]:
+                        no_op = False
+                        state, reward, done, _ = env.step(action_to_do)
+                        index_machine[machine] += 1
+                        step_nb += 1
+                        temp_image = env.render(machine2label=self.machine2label).to_image()
+                        images.append(imageio.imread(temp_image))
+            if no_op and not done:
+                previous_time_step = env.current_time_step
+                env.increase_time_step()
+
+        print("Completed simulation")
+        imageio.mimsave(f"{self.instance}.gif", images, format='GIF', fps=2)
+        env.reset()
 
 if __name__ == "__main__":
     _, instance = sys.argv
     gantt_class = GanttChart(instance)
     gantt_class.create_job_matrix()
-    gantt_class.generate_from_timings()
-
-
-
+    gantt_class.generate_gantt_csv()
+    gantt_class.generate_chart()
+    gantt_class.generate_gif()
