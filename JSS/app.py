@@ -34,7 +34,7 @@ def load_image(img):
 def main():
 	st.markdown(html_temp.format('royalblue'),unsafe_allow_html=True)
 
-	menu = ["Home","My Schedule"]
+	menu = ["Home","For Staff", "For Patients"]
 	sub_menu = ["Plot","Prediction","Metrics"]
 
 	choice = st.sidebar.selectbox("Menu",menu)
@@ -45,7 +45,7 @@ def main():
 			The name was intended to be a double entendre.")
 		st.markdown("Firstly, it\'s meant to be a rhymy pun on the well-known term denoting an healthcare emergency: Code Blue. We adptly noted that in the healthcare setting, dealing with patients struck with dire conditions can be overwhelming and we may not know what the best \
 				way to schedule the treatments for these patients could be. After talking to connections whom are currently working in the healthcare sector, we noted that the current scheduling procedure follows traditional, albeit, reasonable heuristics. Some of these heuristics \
-				are (i) **FIFO -** **F**irst **I**n **F**irst **O**ut (more relevantly, First Come First Serve), (ii) **MWKR -** Patient with **M**aximum **W**or**k** **R**emaining. We identified the opportunity to apply reinforcement-learning to learn a better scheduler for patient treatments.")
+				are (i) **FIFO -** **F**irst **I**n **F**irst **O**ut (more relevantly, First Come First Serve), (ii) **MWR -** Patient with **M**aximum **W**ork **R**emaining. We identified the opportunity to apply reinforcement-learning to learn a better scheduler for patient treatments.")
 
 		st.markdown("Secondly, the name was meant to be a joke on how we tend to write code, which may or may not work but we have no idea why! :laughing:")
 		
@@ -353,26 +353,59 @@ def main():
 # 			time.sleep(5)
 # 		st.success("Finished")
 
-	elif choice == "For Staff:":
-		st.subheader("Timetable for XYZ Hospital:")
+	elif choice == "For Staff":
+		st.subheader("Welcome back, Staff!")
 		patient_count = st.selectbox("Patient Count:", ["-- Select --", 2,5,10,15,20])
 		with st.spinner("Waiting..."):
 			import time
 			time.sleep(2)
 		if type(patient_count) == int:
-			st.info("Here is the timetable for {} patients".format(patient_count))
+			st.success("Simulation for {} patients completed".format(patient_count))
+			st.subheader("Here is your timetable for today:")
 			st.image(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid{patient_count}_1.png?raw=true")
-	
-	elif choice == "For Patients:":
-		st.subheader("Now you can have a clue!")
+			st.subheader("Here is your timetable in tabular form:")
+			df = pd.read_csv(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/schedules/covid{patient_count}_1.csv?raw=true")
+			st.dataframe(df)
+
+	elif choice == "For Patients":
+		st.subheader("Now we have a clue! :smiley:")
 		patient_count = st.selectbox("Patient Count:", ["-- Select --", 2,5,10,15,20])
 		with st.spinner("Waiting..."):
 			import time
 			time.sleep(2)
 
 		if type(patient_count) == int:
-			st.info("Here is the timetable for {} patients".format(patient_count))
-			st.image(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid{patient_count}_1.png?raw=true")
+			st.success("Simulation for {} patients completed".format(patient_count))
+			df = pd.read_csv(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/schedules/covid{patient_count}_1.csv?raw=true")
+			df["Start"] = pd.to_datetime(df["Start"], format="%H:%M:%S").dt.time
+
+			patient_name = st.selectbox("You are:", ["None"] + [f"Patient {i}" for i in range(1,patient_count+1)])
+			if patient_name != "None":
+				st.info(f"Here is your schedule for today, {patient_name}")
+				st.subheader("Your timetable:")
+				patient_df = df.loc[df["Task"] == patient_name]
+				
+				patient_df["Start"] = patient_df["Start"].apply(lambda x: x.strftime("%H:%M:%S"))
+				st.dataframe(patient_df)
+				st.subheader("Queue status at time:")
+				the_time = st.time_input("The time is",datetime.time(10,0))
+				curr_treatment = st.selectbox("What treatment are you waiting for:", ["None"] + list(set(df["Resource"].values)))
+				
+				if curr_treatment != "None":
+					treatment_df = df.loc[df["Resource"] == curr_treatment]
+					patient_time = treatment_df.loc[treatment_df["Task"] == patient_name, "Start"].values[0]
+					st.subheader("People before you:")
+					filtered = treatment_df.loc[(treatment_df["Start"]>the_time) & (treatment_df["Start"]<patient_time), ["Task", "Finish", "Resource"]].sort_values("Finish")
+					st.dataframe(filtered)
+					if filtered.shape[0] == 0:
+						st.success("You are the first in line! It will be your turn soon.")
+					else:
+						st.write(f"Estimated: {filtered.shape[0]} people before you")
+					
+
+
+
+			
 
 
 
