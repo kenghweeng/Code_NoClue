@@ -36,7 +36,6 @@ class GanttChart:
         line_cnt = 1
         while line_str:
             split_data = line_str.split()
-            print(split_data)
             if line_cnt == 1:
                 self.jobs, self.machines = int(split_data[0]), int(split_data[1])
                 # matrix which store tuple of (machine, length of the job)
@@ -105,16 +104,18 @@ class GanttChart:
         fig.update_layout(
             title='Patient scheduling',
             xaxis_tickformat= '%H:%M:%S',
-            xaxis_title=f'Time (24-hour format) with makespan of {self.solution_makespan}',
+            xaxis_title=f'Time (24-hour format) with a makespan of {self.solution_makespan} minutes',
         )
 
         fig.update_yaxes(autorange="reversed")  # otherwise tasks are listed from the bottom up
-        print("rendering")
-        temp_image = fig.to_image()
-        imageio.imsave('test.png', imageio.imread(temp_image))
+        print(f"Saved {self.instance}.PNG to images folder!")
+        imageio.imsave(f'images/{self.instance}.png', imageio.imread(fig.to_image()))
 
 
     def generate_gif(self):
+        # we convert the timings solution (found in self.solution) to the solutions ordered in sequence, 
+        # refer to http://jobshop.jjvh.nl/explanation.php
+
         sol_seq = []
         # Conversion of timings to solution sequence instead
         sorted = self.df.sort_values(by=['Resource_Num', 'Start'])
@@ -122,11 +123,16 @@ class GanttChart:
 
         for _, group in df_grouped:
             sol_seq.append([int(job) for job in group['Task_Num'].values])
-        print(sol_seq)
+
+        # print(sol_seq) for debugging
+
+        #################################
+        # Code block for GIF generation # 
+        #################################
 
         env = JssEnv(env_config={'instance_path': f"instances/{self.instance}"})
         env.reset()
-        # for every machine give the jobs to process in order for every machine
+        
         done = False
         job_nb = len(sol_seq[0])
         machine_nb = len(sol_seq)
@@ -153,8 +159,8 @@ class GanttChart:
                 previous_time_step = env.current_time_step
                 env.increase_time_step()
 
-        print("Completed simulation")
-        imageio.mimsave(f"{self.instance}.gif", images, format='GIF', fps=2)
+        imageio.mimsave(f"images/{self.instance}.gif", images, format='GIF', fps=2)
+        print(f"Saved {self.instance}.GIF to images folder!")
         env.reset()
 
 if __name__ == "__main__":

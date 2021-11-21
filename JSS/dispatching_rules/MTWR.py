@@ -2,14 +2,20 @@ import random
 import wandb
 import gym
 import numpy as np
+import sys
 
 from JSS.default_config import default_config
 
+try: instance_filename = sys.argv[1]
+except: instance_filename = 'covid2_1'
+
+INSTANCE_PATH = f'JSS/instances/{instance_filename}'
 
 def MTWR_worker(default_config):
     wandb.init(config=default_config)
     config = wandb.config
-    env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': config['instance_path']})
+    env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': INSTANCE_PATH})
+    # env = gym.make('JSSEnv:jss-v1', env_config={'instance_path': config['instance_path']})
     env.seed(config['seed'])
     random.seed(config['seed'])
     np.random.seed(config['seed'])

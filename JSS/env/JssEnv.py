@@ -370,7 +370,6 @@ class JssEnv(gym.Env):
                 dict_op["Finish"] = datetime.datetime.fromtimestamp(self.start_timestamp-1e-9)
                 dict_op["Resource"] = machine2label[self.instance_matrix[job][i][0]] if machine2label else f"Doctor {self.instance_matrix[job][i][0]}"
                 df.append(dict_op)
-            print(df)
             i = 0
             while i < self.machines and self.solution[job][i] != -1:
                 dict_op = dict()
@@ -388,7 +387,7 @@ class JssEnv(gym.Env):
             fig = ff.create_gantt(df, index_col='Resource', colors=self.colors, show_colorbar=True,
                                   group_tasks=True)
             fig.update_layout(
-            title='Patient scheduling',
+            title='Patient scheduling GIF',
             xaxis_tickformat= '%H:%M:%S',
             xaxis_title=f'Time (24-hour format)',
         )
