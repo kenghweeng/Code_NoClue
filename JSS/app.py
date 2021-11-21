@@ -7,6 +7,7 @@ import plotly.figure_factory as ff
 import datetime
 import time
 import base64
+from PIL import Image
 
 import matplotlib.pyplot as plt 
 import matplotlib
@@ -98,20 +99,20 @@ def main():
 
 		# MEDIA
 		# Images
-		from PIL import Image
-		img = Image.open("images/covid2_1.png")
+		# img = Image.open("images/covid2_1.png")
+		st.image(load_image('images/covid2_1.png'))
 
-		"""### gif from local file"""
-		file_ = open("images/covid2_1.gif", "rb")
-		contents = file_.read()
-		data_url = base64.b64encode(contents).decode("utf-8")
-		file_.close()
+# 		"""### gif from local file"""
+# 		file_ = open("images/covid2_1.gif", "rb")
+# 		contents = file_.read()
+# 		data_url = base64.b64encode(contents).decode("utf-8")
+# 		file_.close()
 
-		st.markdown(
-			f'<img src="data:image/gif;base64,{data_url}" alt="cat gif">',
-			unsafe_allow_html=True,
-)
-		st.image(img,caption="Streamlit Image")
+# 		st.markdown(
+# 			f'<img src="data:image/gif;base64,{data_url}" alt="cat gif">',
+# 			unsafe_allow_html=True,
+# )
+# 		st.image(img,caption="Streamlit Image")
 
 		# # Audio
 		# audio_file = open('example.mp3',"rb")
