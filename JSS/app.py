@@ -467,6 +467,7 @@ def main():
 			st.subheader("Here is your timetable for today:")
 			st.image(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/images/covid{patient_count}_1.png?raw=true")
 			st.subheader("Here are the details for all patients:")
+			st.write("Click on the column headers to toggle between sorted ascending/descending order")
 			df = pd.read_csv(f"https://github.com/kenghweeng/Code_NoClue/blob/presentation_env/JSS/schedules/covid{patient_count}_1.csv?raw=true")
 			st.dataframe(df)
 			st.subheader("Which patients do you want to look at?")
@@ -493,12 +494,13 @@ def main():
 			if patient_name != "None":
 				st.info(f"Here is your schedule for today, {patient_name}")
 				st.subheader("Your timetable:")
+				st.write("Click on the column headers to toggle between sorted ascending/descending order")
 				patient_df = df.loc[df["Task"] == patient_name]
 				
 				patient_df["Start"] = patient_df["Start"].apply(lambda x: x.strftime("%H:%M:%S"))
 				st.dataframe(patient_df)
 				st.subheader("Queue status at time:")
-				the_time = st.time_input("The time is",datetime.time(10,0))
+				the_time = st.time_input("The time is",datetime.time(0,0))
 				curr_treatment = st.selectbox("What treatment are you waiting for:", ["None"] + list(set(df["Resource"].values)))
 				
 				if curr_treatment != "None":
