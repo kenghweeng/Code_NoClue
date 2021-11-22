@@ -54,7 +54,7 @@ def main():
 		
 		st.write(
         """
-		-   **Registration/Triage**
+		-   **Daily Nurse Rounds/Vital Checks**
 		-   **X-Ray**
 		-   **CT-Scan**
 		-   **MRI**
@@ -185,7 +185,7 @@ def main():
 			)
 
 		if type(patient_count) == int:
-			labels = ['registration/triage', 'x_ray', 'consultation', 'ct_scan', 'dispensary/pharmacy']
+			labels = ['daily_rounds', 'x_ray', 'consultation', 'ct_scan', 'dispensary/pharmacy']
 			machine2label = {i:j for i,j in enumerate(labels)}
 			st.subheader("Mapping of Treatment Types to Names:")
 			st.json(machine2label)
