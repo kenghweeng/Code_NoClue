@@ -15,7 +15,7 @@ except: instance_filename = 'covid01'
 
 INSTANCE_PATH = f'JSS/instances/{instance_filename}'
 OUTPUT_GIF_PATH = f'JSS/images/{instance_filename}_FIFO.gif'
-machine2label=['registration', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
+machine2label=['daily_rounds', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
 
 def FIFO_worker(default_config):
     # wandb.init(config=default_config) # comment out here for non-use of wandb
@@ -52,7 +52,7 @@ def FIFO_worker(default_config):
     # wandb.log({"nb_episodes": 1, "make_span": make_span}) # comment out here for non-use of wandb
 
     print("Completed simulation")
-    # imageio.mimsave(OUTPUT_GIF_PATH, images, format='GIF', fps=2) # uncomment for generation of GIF
+    imageio.mimsave(OUTPUT_GIF_PATH, images, format='GIF', fps=2) # uncomment for generation of GIF
 
 if __name__ == "__main__":
     FIFO_worker(default_config)
