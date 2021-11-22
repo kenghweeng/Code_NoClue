@@ -12,7 +12,7 @@ from env import JssEnv
 class GanttChart:
     def __init__(self, instance):
         self.instance = instance
-        self.machine2label = ['registration', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
+        self.machine2label = ['daily_rounds', 'x_ray', 'consultation', 'ct_scan', 'dispensary']
         self.start_timestamp = datetime.datetime.fromtimestamp(5400).timestamp()
         self.solution = None
         
@@ -95,6 +95,7 @@ class GanttChart:
             clean_df["Start"] = clean_df["Start"].dt.strftime("%H:%M:%S")
             clean_df["Finish"] = clean_df["Finish"].dt.strftime("%H:%M:%S")
             clean_df.to_csv(f'schedules/{self.instance}.csv', index=False)
+            print(f"Saved the optimal schedule {self.instance}.csv to schedules folder!")
             # return self.df
 
     def generate_chart(self):
