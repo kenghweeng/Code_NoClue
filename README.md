@@ -22,7 +22,7 @@ We cite the original [paper](https://arxiv.org/abs/2104.03760) as follows:
 Getting Started
 ------------
 
-**This code has been tested on Ubuntu 18.04 and MacOs 10.15, with Python 3.8
+**This code has been tested on Ubuntu 18.04 and MacOs 10.15, with Python 3.8.
 Some users have reported difficulties running this program on Windows.**
 
 The code uses mainly Ray's RLLib, Tensorflow and Wandb.
@@ -36,10 +36,10 @@ Otherwise, just remove all occurrence of wandb and log the metrics in another wa
 ```shell (bash/zsh/sh)
 git clone https://github.com/kenghweeng/Code_NoClue.git
 git checkout presentation_env
-pip3 install -r latest_requirements.txt
+pip3 install /JSS/requirements.txt
 ```
 
-### Important: Your instance must follow [standard specification](http://jobshop.jjvh.nl/explanation.php#taillard_def).
+### Important: Your instance must follow [standard specifications](http://jobshop.jjvh.nl/explanation.php#taillard_def).
 
 We also provide a comprehensive explanation of the specification in the application above.
 
