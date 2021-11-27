@@ -1,15 +1,12 @@
-A Reinforcement Learning Environment For Job-Shop Scheduling
+Project: Code No Clue
 ==============================
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/kenghweeng/code_noclue/presentation_env/JSS/app.py)
 
-This folder contains the implementation of the paper "A Reinforcement Learning Environment For Job-Shop Scheduling".
+Please visit our deployed application here, for a detailed explanation of the hospital scheduling problem as well as the solutioning methodology.
 
-It contains the deep reinforcement learning approach we have developed to solve the Job-Shop Scheduling problem.
+This proposed approach was largely based on "A Reinforcement Learning Environment For Job-Shop Scheduling". The optimized environment is available as a separate [repository](https://github.com/prosysscience/JSSEnv)
 
-The optimized environment is available as a separate [repository](https://github.com/prosysscience/JSSEnv).
-
-![til](./ta01.gif)
-
-If you've found our work useful for your research, you can cite the [paper](https://arxiv.org/abs/2104.03760) as follows:
+We cite the original [paper](https://arxiv.org/abs/2104.03760) as follows:
 
 ```
 @misc{tassel2021reinforcement,
@@ -25,10 +22,10 @@ If you've found our work useful for your research, you can cite the [paper](http
 Getting Started
 ------------
 
-**This code has been tested on Ubuntu 18.04 and MacOs 10.15. 
+**This code has been tested on Ubuntu 18.04 and MacOs 10.15, with Python 3.8
 Some users have reported difficulties running this program on Windows.**
 
-This work uses Ray's RLLib, Tensorflow and Wandb.
+The code uses mainly Ray's RLLib, Tensorflow and Wandb.
 
 Make sure you have `git`, `cmake`, `zlib1g`, and, on Linux, `zlib1g-dev` installed.
 
@@ -36,47 +33,42 @@ You also need to have a Weight and Bias account to log your metrics.
 Otherwise, just remove all occurrence of wandb and log the metrics in another way.
 
 
-```shell
-git clone https://github.com/prosysscience/JSS
-cd JSS
-pip install -r requirements.txt
+```shell (bash/zsh/sh)
+git clone https://github.com/kenghweeng/Code_NoClue.git
+git checkout presentation_env
+pip3 install -r latest_requirements.txt
 ```
 
-### Important: Your instance must follow [Taillard's specification](http://jobshop.jjvh.nl/explanation.php#taillard_def). 
+### Important: Your instance must follow [standard specification](http://jobshop.jjvh.nl/explanation.php#taillard_def).
+
+We also provide a comprehensive explanation of the specification in the application above.
 
 Project Organization
 ------------
-
+    **root**
     ├── README.md                 <- The top-level README for developers using this project.
+    ├── requirements.txt            <- for reproducibility of environment
     └── JSS
-        ├── dispatching_rules/      <- Contains the code to run the disptaching rule FIFO and MWTR.
-        ├── instances/              <- All Taillard's instances + 5 Demirkol instances.
-        ├── randomLoop/             <- A random loop with action mask, usefull to debug environment and
-        |                             to check if our agent learn.
-        ├── CP.py                   <- OR-Tool's cp model for the JSS problem.
-        ├── CustomCallbacks.py      <- A special RLLib's callback used to save the best solution found.
-        ├── default_config.py       <- default config used for the disptaching rules.
-        ├── env_wrapper.py          <- Envrionment wrapper to save the action's of the best solution found
-        ├── main.py                 <- PPO approach, the main file to call to reproduce our approach.
-        └── models.py               <- Tensorflow model who mask logits of illegal actions.
-
+        ├── dispatching_rules/            <- Contains the code to run traditional heuristics FIFO and MWR
+        ├── env/                          <- a modified OpenGym AI environment based off the above cited paper
+        ├── instances/                    <- Contains benchmark Taillard's & COVID simulations
+        ├── images/                       <- Contains the static images as well as GIFs
+        ├── schedules/                    <- Contains CSVs detailing patient treatment allocation chronologically
+        ├── solutions/                    <- Seralized pickles containing exact solution sequences and makespan
+        ├── app.py                        <- Contains the source code for the Streamlit application.
+        ├── covid_instance_generator.py   <- Realistic Discrete event simulation of COVID patient treatments.
+        ├── CP.py                         <- Google based OR-Tool's cp model for the JSS problem. (For fun)
+        ├── CustomCallbacks.py            <- A special RLLib's callback used to save the best solution found.
+        ├── default_config.py             <- default config used for the disptaching rules.
+        ├── generate_gantt.py             <- Used for generating images/GIFs, solutions, as well as schedules.
+        ├── main.py                       <- PPO approach, the main file to call to reproduce our approach.
+        └── models.py                     <- Tensorflow model who mask logits of illegal actions.
+        
 --------
 
-## License
+### User Tasks: These tasks assume the proper installation of requirements.txt was completed.
 
-MIT License
-
-Inside the installed JssEnv package
-`site-packages/JSSEnv/envs/JssEnv.py`
-
-Insert an additional method
-```
-    def get_legal_actions(self):
-        return self.legal_actions
-```
-In order to expose the private `legal_actions` attribute.
-
-To generate the job shop configurations, in the project root
+1. Generating COVID patient treatment demands (i.e scheduling problems). In the project root,
 ```
 for i in {1..1}; do python -m JSS.covid_instance_generator $i 2 covid2_$i; done
 for i in {1..100}; do python -m JSS.covid_instance_generator $i 5 covid5_$i; done
@@ -86,17 +78,8 @@ for i in {1..100}; do python -m JSS.covid_instance_generator $i 15 covid15_$i; d
 for i in {1..100}; do python -m JSS.covid_instance_generator $i 20 covid20_$i; done
 ```
 
-To run CP on the configurations, in the project root
-```
-for i in {1..100}; do python -W ignore -m JSS.CP  covid2_$i; done
-for i in {1..100}; do python -W ignore -m JSS.CP  covid5_$i; done
-for i in {1..100}; do python -W ignore -m JSS.CP  covid8_$i; done
-for i in {1..100}; do python -W ignore -m JSS.CP  covid10_$i; done
-for i in {1..100}; do python -W ignore -m JSS.CP  covid15_$i; done
-for i in {1..100}; do python -W ignore -m JSS.CP  covid20_$i; done
-```
-
-To run FIFO on the configurations, in the project root
+2. Generating solutions for the simulations created from Point 1: 
+* Solving the scheduling problem with the FIFO heuristic (Assuming you are in project root)
 ```
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO covid2_$i; done
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid5_$i; done
@@ -105,3 +88,29 @@ for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid10_$i
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid15_$i; done
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid20_$i; done
 ```
+* Solving the scheduling problem with Google OR tools: (Assuming you are in project root)
+```
+for i in {1..100}; do python -W ignore -m JSS.CP  covid2_$i; done
+for i in {1..100}; do python -W ignore -m JSS.CP  covid5_$i; done
+for i in {1..100}; do python -W ignore -m JSS.CP  covid8_$i; done
+for i in {1..100}; do python -W ignore -m JSS.CP  covid10_$i; done
+for i in {1..100}; do python -W ignore -m JSS.CP  covid15_$i; done
+for i in {1..100}; do python -W ignore -m JSS.CP  covid20_$i; done
+```
+* Solving the scheduling problem with the PPO reinforcement learning approach.
+```
+cd JSS
+python3.8 main.py <instance_name, for example "covid2_1">
+```
+The above code would generate a seralized pickle to the `solutions/` folder, where we are able to obtain the scheduled timings and also the total makespan for our RL agent. You may want to open the pickled file to take a look.
+
+Also, we have set the training episode here to be for 10 minutes. Some things you may want to change here can be:
+- Line 149, change the quantity to the amount you want to train in seconds.
+- Lines 26, you may want to change the visible GPUs to those GPU cards which are available for training!
+
+3. Suppose you want to plot out the images (GIFs) and a nicely formatted schedule in CSV, we have also provided a generate_gantt.chart for your use! We assume you are currently in the `JSS` folder, which you should be at, when running the `main.py` for the reinforcement learning agent training.
+
+`python3.8 generate_gantt.py <instance_name, for example "covid2_1">`
+
+The script will essentially make use of the instance specifications found in the `instances/` folder, as well as the generated solution pickle in `solutions/`, to generate the relevant GIFs, and timetables in the `images/` and `schedules/` folders respectively.
+
