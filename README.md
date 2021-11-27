@@ -39,7 +39,7 @@ git checkout presentation_env
 pip3 install /JSS/requirements.txt
 ```
 
-### Important: Your instance must follow [standard specifications](http://jobshop.jjvh.nl/explanation.php#taillard_def).
+**Important: Your instance must follow [standard specifications](http://jobshop.jjvh.nl/explanation.php#taillard_def).**
 
 We also provide a comprehensive explanation of the specification in the application above.
 
@@ -78,8 +78,9 @@ for i in {1..100}; do python -m JSS.covid_instance_generator $i 15 covid15_$i; d
 for i in {1..100}; do python -m JSS.covid_instance_generator $i 20 covid20_$i; done
 ```
 
+
 2. Generating solutions for the simulations created from Point 1: 
-* Solving the scheduling problem with the FIFO heuristic (Assuming you are in project root)
+* Solving the scheduling problem with the FIFO heuristic (Assuming you are in project root):
 ```
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO covid2_$i; done
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid5_$i; done
@@ -88,7 +89,7 @@ for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid10_$i
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid15_$i; done
 for i in {1..100}; do python -W ignore -m JSS.dispatching_rules.FIFO  covid20_$i; done
 ```
-* Solving the scheduling problem with Google OR tools: (Assuming you are in project root)
+* Solving the scheduling problem with Google OR tools: (Assuming you are in project root):
 ```
 for i in {1..100}; do python -W ignore -m JSS.CP  covid2_$i; done
 for i in {1..100}; do python -W ignore -m JSS.CP  covid5_$i; done
@@ -97,7 +98,7 @@ for i in {1..100}; do python -W ignore -m JSS.CP  covid10_$i; done
 for i in {1..100}; do python -W ignore -m JSS.CP  covid15_$i; done
 for i in {1..100}; do python -W ignore -m JSS.CP  covid20_$i; done
 ```
-* Solving the scheduling problem with the PPO reinforcement learning approach.
+* Solving the scheduling problem with the PPO reinforcement learning approach:
 ```
 cd JSS
 python3.8 main.py <instance_name, for example "covid2_1">
@@ -107,6 +108,7 @@ The above code would generate a seralized pickle to the `solutions/` folder, whe
 Also, we have set the training episode here to be for 10 minutes. Some things you may want to change here can be:
 - Line 149, change the quantity to the amount you want to train in seconds.
 - Lines 26, you may want to change the visible GPUs to those GPU cards which are available for training!
+
 
 3. Suppose you want to plot out the images (GIFs) and a nicely formatted schedule in CSV, we have also provided a generate_gantt.chart for your use! We assume you are currently in the `JSS` folder, which you should be at, when running the `main.py` for the reinforcement learning agent training.
 
